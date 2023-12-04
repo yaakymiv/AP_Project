@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Details</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        h1 {
+            margin-bottom: 10px;
+        }
+        .event-card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Event Details</h1>
+    {% if user_event %}
+        <div class="event-card">
+            <p>Event ID: {{ user_event.event.eventId }}</p>
+            <p>Title: {{ user_event.event.title }}</p>
+            <p>Description: {{ user_event.event.description }}</p>
+            <p>Date: {{ user_event.event.date }}</p>
+        </div>
+    {% else %}
+        <p>Event not found.</p>
+    {% endif %}
+</body>
+</html>
