@@ -1,5 +1,5 @@
 from flask import Blueprint
-from .views import user_profile,register,login,logout,profileEvents,profileEvent,getAllUsers, getUserById, updateUser, deleteUser, getUserEvents, createEvent, getEventById, createUser
+from .views import user_profile,register,login,logout,profileEvents,profileEvent, createEvent
 
 auth_bp = Blueprint('auth', __name__)
 

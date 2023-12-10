@@ -1,5 +1,6 @@
 import json
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, request, url_for
+from app.views import login
 from .url import auth_bp,user_bp
 from flask_login import LoginManager, current_user
 from .models import db,User,UserEvent,Event
@@ -22,10 +23,19 @@ login_manager.login_view = 'users.login_view'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+class CustomView(ModelView):
+
+    def is_accessible(self):
+        return current_user.is_admin
+
+    def inaccessible_callback(self, name, **kwargs):
+        # redirect to login page if user doesn't have access
+        return redirect(url_for('login', next=request.url))
+
 admin = Admin(app, name='Admin Panel', template_mode='bootstrap3')
-admin.add_view(ModelView(User, db.session, endpoint='admin_user'))
-admin.add_view(ModelView(UserEvent, db.session, endpoint='admin_user_event'))
-admin.add_view(ModelView(Event, db.session, endpoint='admin_event'))
+admin.add_view(CustomView(User, db.session, endpoint='admin_user'))
+admin.add_view(CustomView(UserEvent, db.session, endpoint='admin_user_event'))
+admin.add_view(CustomView(Event, db.session, endpoint='admin_event'))
 #unauthorized/restricted handler
 
 @login_manager.unauthorized_handler

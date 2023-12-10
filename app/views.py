@@ -1,4 +1,4 @@
-from flask import redirect, url_for, flash, render_template, request
+from flask import redirect, url_for, render_template, request
 from flask_login import login_required, login_user,login_manager,current_user,logout_user
 import app
 from .models import User, Event, UserEvent, db
@@ -16,12 +16,11 @@ def register():
         existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
 
         if existing_user:
-            flash('User already exists', 'error')
+            return render_template('409.html')
         else:
             new_user = User(username=username, email=email, password=password)
             db.session.add(new_user)
             db.session.commit()
-            flash('Registration successful. Please log in.', 'success')
             return redirect(url_for('auth.login'))
 
     return render_template('register.html')
@@ -37,9 +36,12 @@ def login():
 
         if user:
             login_user(user)
-            return redirect(url_for('user.user_profile'))
+            if user.is_admin: 
+                return redirect(url_for('admin.index'))
+            else:
+                return redirect(url_for('user.user_profile'))
         else:
-            flash('Invalid username or password', 'error')
+            return render_template('400.html')
 
     return render_template('login.html')
 
@@ -58,7 +60,6 @@ def user_profile():
 def logout():
     if request.method == 'POST':
         logout_user()
-        flash('Logged out successfully!', 'success')
         return redirect(url_for('auth.login'))
     else:
         return render_template('logout_confirmation.html', user=current_user)
@@ -90,7 +91,7 @@ def profileEvent(event_id):
         action = request.form.get('action')
 
         if action == 'update' and request.method == 'POST':
-            # Handle the update logic
+          
             title = request.form.get('title')
             description = request.form.get('description')
             date = request.form.get('date')
@@ -103,7 +104,7 @@ def profileEvent(event_id):
             return redirect(url_for('user.profileEvent',event_id=event_id))
 
         elif action == 'delete' and request.method == 'POST':
-            # Handle the delete logic
+            
             db.session.delete(user_event)
             db.session.commit()
             return redirect(url_for('user.profileEvents',event_id=event_id))
@@ -129,91 +130,6 @@ def profileEvent(event_id):
     else:
         return render_template('404.html')
 
-    
-#ADMIN
-
-def getAllUsers():
-    users = User.query.all()
-    if not users:
-        return render_template('404.html'), 404
-    return render_template('user_list.html', users=users)
-
-def createUser():
-    data = request.json
-    if not data:
-        return render_template('400.html'), 400
-    username = data.get('username')
-    email = data.get('email')
-    password = data.get('password')
-
-    existing_user = User.query.filter((User.username == username) | (User.email == email)| (User.password == password)).first()
-
-    if existing_user:
-        return render_template('409.html', entity='User'),409
-
-    new_user = User(
-        username=username,
-        email=email,
-        password=password
-    )
-
-    db.session.add(new_user)
-    db.session.commit()
-
-    return render_template('new_user.html', userId=new_user.id, username=new_user.username),201
-
-
-def getUserById(user_id):
-    user = User.query.get(user_id)
-    if user:
-        return render_template('user.html', user=user)
-    else:
-        return render_template('404.html'), 404
-
-def updateUser(user_id):
-    user = User.query.get(user_id)
-    data = request.json
-    if not data:
-        return render_template('400.html'), 400
-
-    if user:
-        user.username = data.get('username')
-        user.email = data.get('email')
-        user.password = data.get('password')
-
-        db.session.commit()
-
-        return render_template('new_user.html', userId=user.id, username=user.username),201
-    else:
-        return render_template('404.html'), 404
-
-def deleteUser(user_id):
-    user = User.query.get(user_id)
-
-    if user:
-        db.session.delete(user)
-        db.session.commit()
-        return render_template('delete.html', Id=user.id,entity='User'),204
-    else:
-        return render_template('404.html'), 404
-
-
-def getUserEvents(user_id):
-    user = User.query.get(user_id)
-    if user:
-        events = user.events
-        return render_template('user_events.html', user=user, events=events),200
-    else:
-        return render_template('404.html'), 404
-
-
-
-def getEventById(user_id, event_id):
-    user_event = UserEvent.query.filter_by(user_id=user_id, event_id=event_id).first()
-    if user_event:
-        return render_template('event.html', user_event=user_event),200
-    else:
-        return render_template('404.html'), 404
     
 
     
