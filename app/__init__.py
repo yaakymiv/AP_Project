@@ -31,10 +31,28 @@ class CustomView(ModelView):
     def inaccessible_callback(self, name, **kwargs):
         # redirect to login page if user doesn't have access
         return redirect(url_for('login', next=request.url))
+    
+class UserEventView(CustomView):
+    column_list = ('user', 'event')
+    column_labels = {
+        'user': 'User',
+        'event': 'Event',
+    }
+    
+    form_columns = ('user', 'event')
+
+    form_ajax_refs = {
+        'user': {
+            'fields': (User.username,),
+        },
+        'event': {
+            'fields': (Event.title,),
+        }
+    }
 
 admin = Admin(app, name='Admin Panel', template_mode='bootstrap3')
 admin.add_view(CustomView(User, db.session, endpoint='admin_user'))
-admin.add_view(CustomView(UserEvent, db.session, endpoint='admin_user_event'))
+admin.add_view(UserEventView(UserEvent, db.session, endpoint='admin_user_event'))
 admin.add_view(CustomView(Event, db.session, endpoint='admin_event'))
 #unauthorized/restricted handler
 

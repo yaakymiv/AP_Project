@@ -33,6 +33,8 @@ class User(db.Model,UserMixin):
         return [user_event.event for user_event in self.user_events]
     def get_id(self):
         return str(self.id)
+    def __str__(self):
+        return self.username
 
 class Event(db.Model):
     __tablename__ = 'events'
@@ -41,5 +43,8 @@ class Event(db.Model):
     title = Column(String, nullable=False)
     description = Column(String)
     date = Column(DateTime, default=func.now())
+
+    def __str__(self):
+        return self.title
 
     event_users = relationship('UserEvent', back_populates='event')
