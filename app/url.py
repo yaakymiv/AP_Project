@@ -1,18 +1,19 @@
 from flask import Blueprint
-from .views import getAllUsers, getUserById, updateUser, deleteUser, getUserEvents, createEvent, getEventById, createUser, updateEvent, deleteEvent
+from .views import user_profile,register,login,logout,profileEvents,profileEvent,getAllUsers, getUserById, updateUser, deleteUser, getUserEvents, createEvent, getEventById, createUser
 
-users_bp = Blueprint('users', __name__)
+users_bp = Blueprint('admin', __name__)
 
-users_bp.add_url_rule('/users', view_func=getAllUsers, methods=['GET'])
-users_bp.add_url_rule('/users', view_func=createUser, methods=['POST'])
 
-users_bp.add_url_rule('/users/<int:user_id>', view_func=getUserById, methods=['GET'])
-users_bp.add_url_rule('/users/<int:user_id>', view_func=updateUser, methods=['PUT'])
-users_bp.add_url_rule('/users/<int:user_id>', view_func=deleteUser, methods=['DELETE'])
 
-users_bp.add_url_rule('/users/<int:user_id>/events', view_func=getUserEvents, methods=['GET'])
-users_bp.add_url_rule('/users/<int:user_id>/events', view_func=createEvent, methods=['POST'])
+auth_bp = Blueprint('auth', __name__)
 
-users_bp.add_url_rule('/users/<int:user_id>/events/<int:event_id>', view_func=getEventById, methods=['GET'])
-users_bp.add_url_rule('/users/<int:user_id>/events/<int:event_id>', view_func=updateEvent, methods=['PUT'])
-users_bp.add_url_rule('/users/<int:user_id>/events/<int:event_id>', view_func=deleteEvent, methods=['DELETE'])
+auth_bp.add_url_rule('/login',view_func=login,methods=['GET','POST'])
+auth_bp.add_url_rule('/register',view_func=register,methods=['GET','POST'])
+auth_bp.add_url_rule('/profile/logout',view_func=logout,methods=['GET','POST'])
+
+user_bp = Blueprint('user', __name__)
+
+user_bp.add_url_rule('/profile',view_func=user_profile,methods=['GET','POST'])
+user_bp.add_url_rule('/profile/events',view_func=profileEvents,methods=['GET'])
+user_bp.add_url_rule('/profile/events',view_func=createEvent,methods=['POST'])
+user_bp.add_url_rule('/profile/events/<int:event_id>',view_func=profileEvent,methods=['GET','POST'])

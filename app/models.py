@@ -2,6 +2,7 @@ from sqlalchemy import  Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 
 Base = declarative_base()
 
@@ -16,7 +17,7 @@ class UserEvent(db.Model):
     user = relationship('User', back_populates='user_events')
     event = relationship('Event', back_populates='event_users')
 
-class User(db.Model):
+class User(db.Model,UserMixin):
     __tablename__ = 'users'
     
     id = Column(Integer, primary_key=True)
@@ -28,6 +29,8 @@ class User(db.Model):
 
     def events(self):
         return [user_event.event for user_event in self.user_events]
+    def get_id(self):
+        return str(self.id)
 
 class Event(db.Model):
     __tablename__ = 'events'

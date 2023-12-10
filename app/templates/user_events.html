@@ -7,45 +7,114 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            margin: 20px;
-            text-align: center;
+            background-color: #f8f8f8;
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
         }
+
         h1 {
-            margin-bottom: 10px;
+            text-align: center;
+            color: #333;
         }
+
         .user-card {
+            max-width: 600px;
+            width: 100%;
             background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
             margin-top: 20px;
         }
+
         ul {
             list-style: none;
             padding: 0;
+            margin: 0;
         }
+
         li {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        form {
+            max-width: 600px;
+            width: 100%;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            box-sizing: border-box;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
-    <h1>User Events</h1>
+    <h1>Events</h1>
     <div class="user-card">
-        <p>User ID: {{ user.id }}</p>
-        <p>Username: {{ user.username }}</p>
-        <p>Email: {{ user.email }}</p>
-        <h2>Events:</h2>
         <ul>
             {% for user_event in user.user_events %}
-                <li>{{ user_event.event.title }} - {{ user_event.event.date }}</li>
+                <li><a href="{{ url_for('user.profileEvent', event_id=user_event.event.eventId) }}">{{ user_event.event.title }}</a> - {{ user_event.event.date }}</li>
             {% endfor %}
         </ul>
     </div>
+    
+    <form method="POST" action="{{ url_for('user.createEvent') }}">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required>
+
+        <label for="description">Description:</label>
+        <input type="text" id="description" name="description">
+
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required>
+
+        <button type="submit">Create Event</button>
+    </form>
 </body>
 </html>

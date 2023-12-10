@@ -1,7 +1,136 @@
-from flask import render_template, request
+from flask import redirect, url_for, flash, render_template, request
+from flask_login import login_required, login_user,login_manager,current_user,logout_user
+import app
 from .models import User, Event, UserEvent, db
 
-# /users
+#USER
+
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('user.user_profile'))
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
+
+        if existing_user:
+            flash('User already exists', 'error')
+        else:
+            new_user = User(username=username, email=email, password=password)
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Registration successful. Please log in.', 'success')
+            return redirect(url_for('auth.login'))
+
+    return render_template('register.html')
+
+def login(): 
+    if current_user.is_authenticated:
+        return redirect(url_for('user.user_profile'))
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        user = User.query.filter_by(username=username, password=password).first()
+
+        if user:
+            login_user(user)
+            return redirect(url_for('user.user_profile'))
+        else:
+            flash('Invalid username or password', 'error')
+
+    return render_template('login.html')
+
+
+@login_required
+def user_profile():
+    if request.method == 'POST':
+        db.session.delete(current_user)
+        db.session.commit()
+
+        return redirect(url_for('auth.login'))  
+
+    return render_template('user_profile.html', user=current_user)
+
+@login_required
+def logout():
+    if request.method == 'POST':
+        logout_user()
+        flash('Logged out successfully!', 'success')
+        return redirect(url_for('auth.login'))
+    else:
+        return render_template('logout_confirmation.html', user=current_user)
+    
+@login_required
+def profileEvents():
+    return render_template('user_events.html', user=current_user)
+
+@login_required
+def createEvent():
+    data = request.form
+    new_event = Event(
+        title=data.get('title'),
+        description=data.get('description'),
+        date=data.get('date'),
+    )
+
+    user_event = UserEvent(user=current_user, event=new_event)
+    db.session.add(user_event)
+    db.session.commit()
+
+    return redirect(url_for('user.profileEvents'))
+
+@login_required
+def profileEvent(event_id):
+    user_event = UserEvent.query.filter_by(user_id=current_user.id, event_id=event_id).first()
+
+    if user_event:
+        action = request.form.get('action')
+
+        if action == 'update' and request.method == 'POST':
+            # Handle the update logic
+            title = request.form.get('title')
+            description = request.form.get('description')
+            date = request.form.get('date')
+
+            user_event.event.title = title
+            user_event.event.description = description
+            user_event.event.date = date
+
+            db.session.commit()
+            return redirect(url_for('user.profileEvent',event_id=event_id))
+
+        elif action == 'delete' and request.method == 'POST':
+            # Handle the delete logic
+            db.session.delete(user_event)
+            db.session.commit()
+            return redirect(url_for('user.profileEvents',event_id=event_id))
+        elif action=='add' and request.method == 'POST':
+                
+                participant_username = request.form.get('participant_username')
+
+                participant_user = User.query.filter_by(username=participant_username).first()
+
+                if participant_user:
+                    # Check if the user is already a participant
+                    if participant_user not in [participant.user for participant in user_event.event.event_users]:
+                        # Add the user as a participant
+                        new_participant = UserEvent(user=participant_user, event=user_event.event)
+                        db.session.add(new_participant)
+                        db.session.commit()
+
+                # Redirect back to the event details page
+                return redirect(url_for('user.profileEvent', event_id=event_id))
+        else:
+            # Render the template for the initial GET request
+            return render_template('event.html', user_event=user_event)
+    else:
+        return render_template('404.html')
+
+    
+#ADMIN
 
 def getAllUsers():
     users = User.query.all()
@@ -33,7 +162,6 @@ def createUser():
 
     return render_template('new_user.html', userId=new_user.id, username=new_user.username),201
 
-# /users/{user_id}
 
 def getUserById(user_id):
     user = User.query.get(user_id)
@@ -69,7 +197,6 @@ def deleteUser(user_id):
     else:
         return render_template('404.html'), 404
 
-# /users/{user_id}/events
 
 def getUserEvents(user_id):
     user = User.query.get(user_id)
@@ -79,28 +206,7 @@ def getUserEvents(user_id):
     else:
         return render_template('404.html'), 404
 
-def createEvent(user_id):
-    user = User.query.get(user_id)
-    data = request.json
-    if not data:
-        return render_template('400.html'), 400
 
-    if user:
-        new_event = Event(
-            title=data.get('title'),
-            description=data.get('description'),
-            date=data.get('date'),
-        )
-
-        user_event = UserEvent(user=user, event=new_event)
-        db.session.add(user_event)
-        db.session.commit()
-
-        return render_template('new_event.html', title=new_event.title,date=new_event.date),201
-    else:
-        return render_template('404.html'), 404
-
-# users/user_id/events/event_id
 
 def getEventById(user_id, event_id):
     user_event = UserEvent.query.filter_by(user_id=user_id, event_id=event_id).first()
@@ -109,33 +215,7 @@ def getEventById(user_id, event_id):
     else:
         return render_template('404.html'), 404
     
-def updateEvent(user_id, event_id):
-    user_event = UserEvent.query.filter_by(user_id=user_id, event_id=event_id).first()
-    data = request.json
-    if not data:
-        return render_template('400.html'), 400
 
-    if user_event:
-        event = user_event.event
-        event.title = data.get('title')
-        event.description = data.get('description')
-        event.date = data.get('date')
-
-        db.session.commit()
-
-        return render_template('new_event.html', title=user_event.event.title,date=user_event.event.date),201
-    else:
-        return render_template('404.html'), 404
-
-def deleteEvent(user_id, event_id):
-    user_event = UserEvent.query.filter_by(user_id=user_id, event_id=event_id).first()
-
-    if user_event:
-        db.session.delete(user_event)
-        db.session.commit()
-        return render_template('delete.html', Id=event_id,entity='Event'),204
-    else:
-        return render_template('404.html'), 404
     
 def seed_data():
     # Test Data for User model
