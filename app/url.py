@@ -1,10 +1,6 @@
 from flask import Blueprint
 from .views import user_profile,register,login,logout,profileEvents,profileEvent,getAllUsers, getUserById, updateUser, deleteUser, getUserEvents, createEvent, getEventById, createUser
 
-users_bp = Blueprint('admin', __name__)
-
-
-
 auth_bp = Blueprint('auth', __name__)
 
 auth_bp.add_url_rule('/login',view_func=login,methods=['GET','POST'])

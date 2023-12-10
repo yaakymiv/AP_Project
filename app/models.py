@@ -1,4 +1,4 @@
-from sqlalchemy import  Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import  Boolean, Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
 from flask_sqlalchemy import SQLAlchemy
@@ -24,6 +24,8 @@ class User(db.Model,UserMixin):
     username = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
+    is_admin = Column(Boolean, default=False)
+
 
     user_events = relationship('UserEvent', back_populates='user')
 

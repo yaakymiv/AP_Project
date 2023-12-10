@@ -1,16 +1,16 @@
 import json
 from flask import Flask, redirect, url_for
-from .url import users_bp,auth_bp,user_bp
+from .url import auth_bp,user_bp
 from flask_login import LoginManager, current_user
-from .models import db,User
+from .models import db,User,UserEvent,Event
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
 
 app = Flask(__name__,template_folder='templates')
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:1111@localhost/calendar'
-app.register_blueprint(users_bp)
 app.register_blueprint(auth_bp)
 app.register_blueprint(user_bp)
 
@@ -22,6 +22,10 @@ login_manager.login_view = 'users.login_view'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+admin = Admin(app, name='Admin Panel', template_mode='bootstrap3')
+admin.add_view(ModelView(User, db.session, endpoint='admin_user'))
+admin.add_view(ModelView(UserEvent, db.session, endpoint='admin_user_event'))
+admin.add_view(ModelView(Event, db.session, endpoint='admin_event'))
 #unauthorized/restricted handler
 
 @login_manager.unauthorized_handler
