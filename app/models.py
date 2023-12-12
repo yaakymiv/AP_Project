@@ -26,7 +26,6 @@ class User(db.Model,UserMixin):
     password = Column(String, nullable=False)
     is_admin = Column(Boolean, default=False)
 
-
     user_events = relationship('UserEvent', back_populates='user')
 
     def events(self):
